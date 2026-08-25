@@ -1,0 +1,68 @@
+name: Build Waterloo Work iOS
+
+on:
+  push:
+    branches:
+      - waterloo-work-ios-build
+  workflow_dispatch:
+
+jobs:
+  build-ios:
+    runs-on: macos-15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate Xcode project
+        working-directory: waterloo-ios
+        run: xcodegen generate
+
+      - name: Build iPhone app without signing
+        run: |
+          xcodebuild \
+            -project waterloo-ios/WaterlooWork.xcodeproj \
+            -scheme WaterlooWork \
+            -configuration Release \
+            -sdk iphoneos \
+            -derivedDataPath "$PWD/build" \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            build
+
+      - name: Package IPA
+        run: |
+          APP_PATH="$(find build/Build/Products/Release-iphoneos -maxdepth 1 -name 'WaterlooWork.app' -print -quit)"
+          test -n "$APP_PATH"
+          test -f "$APP_PATH/WaterlooWork"
+          rm -rf Payload
+          mkdir Payload
+          cp -R "$APP_PATH" Payload/
+          zip -qry WaterlooWork-unsigned.ipa Payload
+          unzip -l WaterlooWork-unsigned.ipa | head -40
+
+      - name: Build iOS Simulator app
+        run: |
+          xcodebuild \
+            -project waterloo-ios/WaterlooWork.xcodeproj \
+            -scheme WaterlooWork \
+            -configuration Release \
+            -sdk iphonesimulator \
+            -derivedDataPath "$PWD/build-simulator" \
+            CODE_SIGNING_ALLOWED=NO \
+            build
+          ditto -c -k --sequesterRsrc --keepParent \
+            build-simulator/Build/Products/Release-iphonesimulator/WaterlooWork.app \
+            WaterlooWork-Simulator.app.zip
+
+      - name: Upload iOS packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: WaterlooWork-iOS
+          path: |
+            WaterlooWork-unsigned.ipa
+            WaterlooWork-Simulator.app.zip
+          if-no-files-found: error
