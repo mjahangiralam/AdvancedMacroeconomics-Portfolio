@@ -1,0 +1,57 @@
+name: Build Waterloo Work SwiftUI
+
+on:
+  push:
+    branches:
+      - waterloo-work-swiftui-native
+
+jobs:
+  build-ios:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate Xcode project
+        working-directory: waterloo-swiftui
+        run: xcodegen generate
+
+      - name: Build SwiftUI app for iPhone Simulator
+        working-directory: waterloo-swiftui
+        run: |
+          xcodebuild \
+            -project WaterlooWork.xcodeproj \
+            -scheme WaterlooWork \
+            -sdk iphonesimulator \
+            -destination 'generic/platform=iOS Simulator' \
+            CODE_SIGNING_ALLOWED=NO \
+            build
+
+      - name: Package Xcode project
+        run: |
+          mkdir -p artifact
+          cp -R waterloo-swiftui/WaterlooWork.xcodeproj artifact/
+          cp -R waterloo-swiftui/WaterlooWork artifact/
+          cat > artifact/README.txt <<'EOF'
+          Waterloo Work — Native SwiftUI
+
+          Open WaterlooWork.xcodeproj in Xcode.
+          Choose an iPhone Simulator and press Run.
+
+          No Capacitor.
+          No WKWebView.
+          No embedded HTML.
+          No Vercel dependency.
+          Native SwiftUI + URLSession + Supabase.
+          EOF
+          cd artifact && zip -r ../WaterlooWork-SwiftUI-Xcode.zip .
+
+      - name: Upload Xcode project
+        uses: actions/upload-artifact@v4
+        with:
+          name: WaterlooWork-SwiftUI-Xcode
+          path: WaterlooWork-SwiftUI-Xcode.zip
+          if-no-files-found: error
