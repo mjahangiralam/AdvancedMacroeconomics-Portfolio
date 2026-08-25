@@ -1,0 +1,25 @@
+name: WaterlooWork
+options:
+  bundleIdPrefix: org.aieconlab
+  deploymentTarget:
+    iOS: "16.0"
+targets:
+  WaterlooWork:
+    type: application
+    platform: iOS
+    sources:
+      - WaterlooWork
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: org.aieconlab.waterloowork
+        PRODUCT_NAME: WaterlooWork
+        SWIFT_VERSION: 5.0
+        TARGETED_DEVICE_FAMILY: "1"
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_CFBundleDisplayName: Waterloo Work
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES
+        CODE_SIGN_STYLE: Automatic
+        MARKETING_VERSION: 1.0
+        CURRENT_PROJECT_VERSION: 1
+        ASSETCATALOG_COMPILER_APPICON_NAME: ""
